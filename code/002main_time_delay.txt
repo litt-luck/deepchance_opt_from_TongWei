@@ -1,0 +1,120 @@
+% Time Delay Compensation System Verification (MATLAB 2018b Ultimate Compatible Version)
+function main_time_delay()
+    % Basic parameter settings
+    Ts = 0.001;          % Sampling period 1ms
+    sim_time = 1.5;       % Simulation duration 1.5 seconds
+    t = (0:Ts:sim_time)'; % Time column vector
+    
+    % Controller parameters (simplified stable system)
+    A = [0.95 0; 0 0.95]; % State matrix
+    B = [0.1; 0.1];       % Input matrix
+    K = 0.7;              % Feedback gain
+    Kd = 0.03;            % Differential gain
+    
+    % Test case: 20ms time delay
+    tau = 0.020; % 20ms
+    
+    % Generate reference signal (sine wave with noise)
+    ref_signal = 0.5*sin(2*pi*1*t) + 0.01*randn(size(t));
+    
+    % Print start information
+    disp('Starting time delay compensation system verification...');
+    
+    % Run uncompensated system simulation
+    [x_nc, u_nc] = simulate_system(tau, A, B, ref_signal, Ts, 0, K, Kd);
+    
+    % Run compensated system simulation
+    [x_pc, u_pc, ts] = simulate_system(tau, A, B, ref_signal, Ts, 1, K, Kd);
+    
+    % Calculate performance metrics
+    err_nc = compute_error(x_nc, ref_signal, Ts);
+    err_pc = compute_error(x_pc, ref_signal, Ts);
+    
+    % Display results
+    show_results(err_nc, err_pc, ts, tau);
+    
+    % Plot results
+    plot_compare_results(t, ref_signal, x_nc, x_pc);
+end
+
+%% Core simulation function (compatible with 2018b)
+function [x, u, settling_time] = simulate_system(tau, A, B, r, Ts, is_compensated, K, Kd)
+    N = length(r);
+    x = zeros(2,N);
+    u = zeros(1,N);
+    delay_steps = max(1, round(tau/Ts)); % Ensure at least 1 step delay
+    settling_time = NaN;
+    
+    for k = delay_steps+1:N-1
+        % Control law generation
+        if is_compensated
+            % State prediction (simplified version)
+            x_pred = A*x(:,k-1) + B*u(:,k-delay_steps);
+            % Feedback control
+            u(k) = K*(r(k) - x_pred(1)) + Kd*(x_pred(1)-x(1,k-1));
+        else
+            % Uncompensated control
+            u(k) = 0.5*(r(k) - x(1,k));
+        end
+        
+        % System dynamics update
+        x(:,k+1) = A*x(:,k) + B*u(k-delay_steps+1) + 0.008*randn(2,1);
+        
+        % Settling time detection (last 1/3 period)
+        if k > 2*N/3 && isnan(settling_time)
+            if all(abs(x(1,k-50:k)-r(k-50:k)) < 0.03)
+                settling_time = k*Ts;
+            end
+        end
+    end
+    
+    if isnan(settling_time)
+        settling_time = Ts*N; % Default: not converged
+    end
+end
+
+%% Performance calculation function
+function err = compute_error(x, r, Ts)
+    N = length(r);
+    err = sqrt(mean((x(1,round(0.8*N):end) - r(round(0.8*N):end)').^2));
+end
+
+%% Result display function
+function show_results(err_nc, err_pc, ts, tau)
+    disp('================================');
+    disp(['Time Delay Compensation Results (τ=',num2str(tau*1000),'ms)']);
+    disp(['Uncompensated System Error: ', num2str(err_nc*1000, '%.2f'), ' mm']);
+    disp(['Compensated System Error: ', num2str(err_pc*1000, '%.2f'), ' mm']);
+    disp(['System Settling Time: ', num2str(ts, '%.3f'), ' s']);
+    disp('================================');
+end
+
+%% Result visualization function
+function plot_compare_results(t, r, x_nc, x_pc)
+    figure('Name','Time Delay Compensation Performance Comparison','NumberTitle','off',...
+           'Position',[100 100 800 600],'Color','w');
+    
+    % Reference signal and response comparison
+    subplot(2,1,1);
+    plot(t, r, 'k-', 'LineWidth', 1.5); hold on;
+    plot(t, x_nc(1,:), 'r:', 'LineWidth', 1.5);
+    plot(t, x_pc(1,:), 'b-', 'LineWidth', 1.2);
+    hold off;
+    title('System Response Comparison');
+    xlabel('Time (s)'); ylabel('Amplitude');
+    legend('Reference Signal', 'Uncompensated Response', 'Compensated Response');
+    grid on;
+    
+    % Error comparison
+    subplot(2,1,2);
+    plot(t, abs(x_nc(1,:)-r'), 'r-', 'LineWidth', 1.5); hold on;
+    plot(t, abs(x_pc(1,:)-r'), 'b-', 'LineWidth', 1.2);
+    hold off;
+    title('Tracking Error Comparison');
+    xlabel('Time (s)'); ylabel('Error Amplitude');
+    legend('Uncompensated Error', 'Compensated Error');
+    grid on;
+    
+    % Auto-adjust plot
+    set(findall(gcf,'-property','FontSize'),'FontSize',10)
+end

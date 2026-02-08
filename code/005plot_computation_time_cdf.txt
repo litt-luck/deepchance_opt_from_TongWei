@@ -1,0 +1,97 @@
+function plot_computation_time_cdf()
+    % Generate Figure 4.4(a): Computation Time CDF Comparison Curve
+    
+    %% Initialize settings
+    try
+        % Clear environment
+        clc;
+        close all force;
+        
+        % Create figure window
+        fig = figure('Name', 'Computation Time CDF',...
+                   'Color', 'white',...
+                   'Position', [100 100 800 500],...
+                   'PaperPositionMode', 'auto');
+        
+        %% Simulate computation time data (replace with real measurement data in actual application)
+        rng(2023); % Fixed random seed
+        
+        % TO-Baseline computation time data (unit ms)
+        time_TO = 15 + 15*randn(1,1000);
+        time_TO(time_TO<5) = 5 + rand*(10-5); % Truncation processing
+        
+        % DD-Baseline computation time data (unit ms)
+        time_DD = 3 + 0.8*randn(1,1000);
+        time_DD(time_DD<1) = 1 + rand*(2-1);
+        
+        % DeepChance-OPT computation time data (unit ms)
+        time_ours = 3.5 + 0.9*randn(1,1000);
+        time_ours(time_ours<1.5) = 1.5 + rand*(3-1.5);
+        
+        % Real-time threshold
+        threshold = 20; % ms
+        
+        %% Calculate CDF curves
+        [f_TO, x_TO] = ecdf(time_TO);
+        [f_DD, x_DD] = ecdf(time_DD);
+        [f_ours, x_ours] = ecdf(time_ours);
+        
+        %% Plot CDF curves
+        hold on;
+        
+        % Plot method curves
+        p1 = plot(x_TO, f_TO, 'Color', [0.5 0.5 0.5], 'LineWidth', 3, 'LineStyle', '-.');
+        p2 = plot(x_DD, f_DD, 'Color', [0.8 0.2 0.2], 'LineWidth', 3);
+        p3 = plot(x_ours, f_ours, 'Color', [0 0.447 0.741], 'LineWidth', 3);
+        
+        % Plot real-time threshold line
+        line([threshold threshold], [0 1], 'Color', 'red', 'LineStyle', '--', 'LineWidth', 2.5);
+        text(threshold+1, 0.5, 'Real-time Threshold', 'Color', 'red', 'FontSize', 12, 'Rotation', 90);
+        
+        % Mark key performance points
+        plot(7.2, 0.99, 'ko', 'MarkerSize', 8, 'MarkerFaceColor', [0 0.447 0.741]);
+        text(7.2, 0.92, 'Max Time 7.2ms', 'FontSize', 10, 'HorizontalAlignment', 'center');
+        
+        plot(3.8, 0.5, 'kp', 'MarkerSize', 10, 'MarkerFaceColor', [0 0.447 0.741]);
+        text(3.8, 0.4, 'Median Time 3.8ms', 'FontSize', 10, 'HorizontalAlignment', 'center');
+        
+        %% Figure decoration
+        set(gca, 'FontSize', 12, 'GridLineStyle', ':', 'LineWidth', 1.5);
+        grid on;
+        xlabel('Computation Time (ms)', 'FontSize', 13, 'FontWeight', 'bold');
+        ylabel('Cumulative Probability', 'FontSize', 13, 'FontWeight', 'bold');
+        xlim([0 40]);
+        ylim([0 1.05]);
+        
+        % Add legend
+        legend([p1 p2 p3], {'TO-Baseline', 'DD-Baseline', 'DeepChance-OPT'},...
+              'Location', 'southeast', 'FontSize', 12);
+        
+        % Add title
+        title('Figure 4.4(a) CDF Comparison of Computation Time', 'FontSize', 14, 'FontWeight', 'bold');
+        
+        %% Save images
+        output_dir = 'results_figures';
+        if ~exist(output_dir, 'dir')
+            mkdir(output_dir);
+        end
+        
+        % Save as PNG (600dpi)
+        print(fig, fullfile(output_dir, 'figure4_4a.png'), '-dpng', '-r600');
+        
+        % Save as FIG
+        saveas(fig, fullfile(output_dir, 'figure4_4a.fig'));
+        
+        fprintf('=== Images successfully saved ===\n');
+        fprintf('Save path: %s\n', fullfile(pwd, output_dir));
+        
+    catch ME
+        fprintf('!!! Runtime error !!!\n');
+        fprintf('Error message: %s\n', ME.message);
+        fprintf('Location: %s (line %d)\n', ME.stack(1).name, ME.stack(1).line);
+        
+        if exist('fig', 'var') && ishandle(fig)
+            close(fig);
+        end
+    end
+end

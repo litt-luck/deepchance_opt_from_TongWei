@@ -1,0 +1,158 @@
+function plot_ablation_results()
+    % Generate Fig. 4.3: Ablation study comparison
+    % Compatible with MATLAB R2018b+
+    % Output: PNG and FIG formats
+
+    %% Initialization
+    try
+        clc;
+        close all force;
+
+        % Create figure
+        fig = figure('Name', 'Ablation Study Results', ...
+            'Color', 'white', ...
+            'Position', [100 100 900 600], ...
+            'PaperPositionMode', 'auto');
+
+        %% Ablation labels (English, correct order)
+        ablation_groups = {'Full Model', ...
+                           'w/o C', ...
+                           'w/o P', ...
+                           'w/o A'};
+
+        %% Simulated ablation data (replace with real data)
+        % Final Position Error (FPE, mm)
+        fpe_data  = [0.21, 0.19, 0.35, 0.28];
+        fpe_error = [0.06, 0.07, 0.12, 0.09];
+
+        % Grasp Success Rate (GSR, %)
+        gsr_data  = [96.8, 94.2, 89.7, 92.1];
+        gsr_error = [1.2, 2.1, 3.5, 2.3];
+
+        % Constraint Violation Rate (CVR, %)
+        cvr_data  = [2.3, 11.5, 3.8, 5.2];
+        cvr_error = [0.6, 2.8, 1.1, 1.4];
+
+        % Average Decision Time (ADT, ms)
+        adt_data  = [3.8, 2.3, 8.9, 3.6];
+        adt_error = [0.9, 0.5, 2.3, 0.8];
+
+        %% Bar colors (consistent across subplots)
+        bar_colors = [0.2 0.6 0.8;   % blue
+                      0.8 0.3 0.3;   % red
+                      0.5 0.5 0.5;   % gray
+                      0.9 0.6 0.2];  % orange
+
+        %% Common axis formatting helper
+        n = numel(ablation_groups);
+        x = 1:n;
+
+        %% (a) Localization Accuracy
+        subplot(2,2,1); hold on;
+        b = bar(fpe_data, 'FaceColor', 'flat', 'EdgeColor', 'none');
+        b.CData = bar_colors;
+        errorbar(x, fpe_data, fpe_error, 'k.', 'LineWidth', 1.5);
+
+        ax = gca;
+        ax.XTick = x;
+        ax.XTickLabel = ablation_groups;
+        ax.XTickLabelRotation = 0;      % NOT slanted
+        ax.XLim = [0.5 n+0.5];
+        ax.FontSize = 10;
+
+        ylabel('Final Position Error (mm)', 'FontSize', 11);
+        title('(a) Localization Accuracy', 'FontSize', 12);
+        grid on;
+        ylim([0 0.5]);
+
+        %% (b) Task Success Rate
+        subplot(2,2,2); hold on;
+        b = bar(gsr_data, 'FaceColor', 'flat', 'EdgeColor', 'none');
+        b.CData = bar_colors;
+        errorbar(x, gsr_data, gsr_error, 'k.', 'LineWidth', 1.5);
+
+        ax = gca;
+        ax.XTick = x;
+        ax.XTickLabel = ablation_groups;
+        ax.XTickLabelRotation = 0;
+        ax.XLim = [0.5 n+0.5];
+        ax.FontSize = 10;
+
+        ylabel('Grasp Success Rate (%)', 'FontSize', 11);
+        title('(b) Task Success Rate', 'FontSize', 12);
+        grid on;
+        ylim([80 100]);
+
+        %% (c) Safety Performance
+        subplot(2,2,3); hold on;
+        b = bar(cvr_data, 'FaceColor', 'flat', 'EdgeColor', 'none');
+        b.CData = bar_colors;
+        errorbar(x, cvr_data, cvr_error, 'k.', 'LineWidth', 1.5);
+
+        ax = gca;
+        ax.XTick = x;
+        ax.XTickLabel = ablation_groups;
+        ax.XTickLabelRotation = 0;
+        ax.XLim = [0.5 n+0.5];
+        ax.FontSize = 10;
+
+        ylabel('Constraint Violation Rate (%)', 'FontSize', 11);
+        title('(c) Safety Performance', 'FontSize', 12);
+        grid on;
+        ylim([0 15]);
+
+        %% (d) Real-Time Performance
+        subplot(2,2,4); hold on;
+        b = bar(adt_data, 'FaceColor', 'flat', 'EdgeColor', 'none');
+        b.CData = bar_colors;
+        errorbar(x, adt_data, adt_error, 'k.', 'LineWidth', 1.5);
+
+        % Real-time threshold
+        plot([0.5 n+0.5], [20 20], 'r--', 'LineWidth', 2);
+        text((n+1)/2, 21, 'Real-Time Threshold', 'Color', 'r', ...
+            'FontSize', 10, 'HorizontalAlignment', 'center');
+
+        ax = gca;
+        ax.XTick = x;
+        ax.XTickLabel = ablation_groups;
+        ax.XTickLabelRotation = 0;
+        ax.XLim = [0.5 n+0.5];
+        ax.FontSize = 10;
+
+        ylabel('Computation Time (ms)', 'FontSize', 11);
+        title('(d) Real-Time Performance', 'FontSize', 12);
+        grid on;
+        ylim([0 25]);
+
+        %% Main title
+        annotation(fig, 'textbox', [0.3 0.94 0.4 0.05], ...
+            'String', 'Fig. 4.3 Ablation Study Results', ...
+            'FontSize', 14, ...
+            'FontWeight', 'bold', ...
+            'EdgeColor', 'none', ...
+            'HorizontalAlignment', 'center');
+
+        %% Save figures
+        output_dir = 'results_figures';
+        if ~exist(output_dir, 'dir')
+            mkdir(output_dir);
+        end
+
+        % PNG (600 dpi)
+        print(fig, fullfile(output_dir, 'figure4_3.png'), '-dpng', '-r600');
+        % FIG (editable in MATLAB Property Inspector)
+        saveas(fig, fullfile(output_dir, 'figure4_3.fig'));
+
+        fprintf('=== Figure saved successfully ===\n');
+        fprintf('Path: %s\n', fullfile(pwd, output_dir));
+
+    catch ME
+        fprintf('!!! Runtime Error !!!\n');
+        fprintf('Message: %s\n', ME.message);
+        fprintf('Location: %s (Line %d)\n', ME.stack(1).name, ME.stack(1).line);
+
+        if exist('fig', 'var') && ishandle(fig)
+            close(fig);
+        end
+    end
+end

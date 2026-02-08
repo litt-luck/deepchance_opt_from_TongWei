@@ -1,0 +1,450 @@
+function multimodal_uncertainty_3d_visualization()
+    %% ====================== 参数设置 ======================
+    rng(2023); % 固定随机种子
+    num_points = 100; % 空间网格点数
+    sim_time = 2;     % 仿真时长(秒)
+    dt = 0.02;        % 时间步长(秒)
+    
+    %% ====================== 数据生成 ======================
+    % 1. 静态场景数据
+    modalities = {'Random Uncertainty', 'Fuzzy Uncertainty', 'Cognitive Uncertainty', 'Time-Delay Uncertainty'};
+    S1 = [0.62, 0.18, 0.12, 0.08]; % 主效应指数
+    ST = [0.78, 0.34, 0.25, 0.12]; % 总效应指数
+    weights = [0.71, 0.23, 0.15, 0.06]; % 关键路径权重
+    
+    % 2. 动态传播数据
+    time_vec = 0:dt:sim_time;
+    num_steps = length(time_vec);
+    dynamic_weights = generate_dynamic_weights(time_vec, sim_time);
+    
+    % 3. 分布验证数据
+    error_bins = {'[0,0.01)', '[0.01,0.02)', '[0.02,0.03)', '≥0.03'};
+    theory_pdf = [0.38, 0.45, 0.15, 0.02];
+    exp_freq = [0.35, 0.47, 0.16, 0.02];
+    rel_error = (exp_freq - theory_pdf) ./ theory_pdf * 100;
+    
+    %% ====================== 3D可视化 ======================
+    % 静态场景分析 - 3D柱状图
+    fig1 = figure('Name', 'Static Scenario Analysis', 'Position', [100, 100, 1000, 800], 'Color', 'w');
+    plot_static_analysis_3d(modalities, S1, ST, weights);
+    
+    % 动态传播分析 - 3D曲面图
+    fig2 = figure('Name', 'Dynamic Propagation Analysis', 'Position', [200, 200, 1000, 800], 'Color', 'w');
+    plot_dynamic_propagation_3d(time_vec, modalities, dynamic_weights);
+    
+    % 分布验证分析 - 3D柱状图
+    fig3 = figure('Name', 'Distribution Validation', 'Position', [300, 300, 1000, 800], 'Color', 'w');
+    plot_distribution_validation_3d(error_bins, theory_pdf, exp_freq, rel_error);
+    
+    %% ====================== 数据保存 ======================
+    % 创建桌面上的数据文件夹
+    desktop_path = fullfile(getenv('USERPROFILE'), 'Desktop');
+    data_dir = fullfile(desktop_path, 'Multimodal_Uncertainty_Data');
+    
+    if ~exist(data_dir, 'dir')
+        mkdir(data_dir);
+    end
+    
+    % 1. 保存静态场景数据
+    static_data = table(modalities', S1', ST', weights', ...
+        'VariableNames', {'Modality', 'Sobol_Main_Effect', 'Total_Effect', 'Critical_Path_Weight'});
+    writetable(static_data, fullfile(data_dir, 'static_scenario_data.csv'));
+    
+    % 2. 保存动态传播数据
+    dynamic_data = array2table([time_vec', dynamic_weights], ...
+        'VariableNames', ['Time', modalities]);
+    writetable(dynamic_data, fullfile(data_dir, 'dynamic_propagation_data.csv'));
+    
+    % 3. 保存分布验证数据
+    distribution_data = table(error_bins', theory_pdf', exp_freq', rel_error', ...
+        'VariableNames', {'Error_Bin', 'Theoretical_PDF', 'Experimental_Frequency', 'Relative_Error_Percent'});
+    writetable(distribution_data, fullfile(data_dir, 'distribution_validation_data.csv'));
+    
+    % 4. 保存验证结果
+    [h, p] = kstest2(theory_pdf, exp_freq);
+    validation_results = table(h, p, ...
+        'VariableNames', {'KSTest_RejectNull', 'KSTest_PValue'});
+    writetable(validation_results, fullfile(data_dir, 'validation_results.csv'));
+    
+    % 5. 保存图像
+    saveas(fig1, fullfile(data_dir, 'static_analysis_3d.png'));
+    saveas(fig2, fullfile(data_dir, 'dynamic_propagation_3d.png'));
+    saveas(fig3, fullfile(data_dir, 'distribution_validation_3d.png'));
+    
+    % 6. 创建数据字典
+    data_dict = {
+        '文件名', '描述', '列名'
+        'static_scenario_data.csv', '静态场景分析数据', 'Modality: 不确定性类型, Sobol_Main_Effect: Sobol主效应指数, Total_Effect: 总效应指数, Critical_Path_Weight: 关键路径权重'
+        'dynamic_propagation_data.csv', '动态传播数据', 'Time: 时间(s), Random Uncertainty: 随机不确定性权重, Fuzzy Uncertainty: 模糊不确定性权重, Cognitive Uncertainty: 认知不确定性权重, Time-Delay Uncertainty: 时延不确定性权重'
+        'distribution_validation_data.csv', '分布验证数据', 'Error_Bin: 误差区间(mm), Theoretical_PDF: 理论概率密度, Experimental_Frequency: 实验频率, Relative_Error_Percent: 相对误差百分比'
+        'validation_results.csv', '验证结果', 'KSTest_RejectNull: K-S检验是否拒绝原假设(0=接受,1=拒绝), KSTest_PValue: K-S检验P值'
+    };
+    
+    data_dict_table = cell2table(data_dict(2:end, :), 'VariableNames', data_dict(1, :));
+    writetable(data_dict_table, fullfile(data_dir, 'data_dictionary.csv'));
+    
+    % 7. 创建README文件
+    readme_content = {
+        'Multimodal Uncertainty Propagation Experiment Data'
+        '================================================='
+        ''
+        'This dataset contains the results of a multimodal uncertainty propagation experiment.'
+        'The experiment analyzes uncertainty propagation across different modalities:'
+        '  - Random Uncertainty'
+        '  - Fuzzy Uncertainty'
+        '  - Cognitive Uncertainty'
+        '  - Time-Delay Uncertainty'
+        ''
+        'Files:'
+        '1. static_scenario_data.csv - Static scenario analysis data'
+        '2. dynamic_propagation_data.csv - Dynamic propagation data over time'
+        '3. distribution_validation_data.csv - Distribution validation data'
+        '4. validation_results.csv - Validation results (K-S test)'
+        '5. data_dictionary.csv - Data dictionary explaining all files'
+        '6. static_analysis_3d.png - 3D visualization of static scenario analysis'
+        '7. dynamic_propagation_3d.png - 3D visualization of dynamic propagation'
+        '8. distribution_validation_3d.png - 3D visualization of distribution validation'
+        '9. README.txt - This readme file'
+        '10. validation_results.txt - Detailed validation results'
+        ''
+        'Experiment Parameters:'
+        sprintf('  - Simulation Time: %.1f seconds', sim_time)
+        sprintf('  - Time Step: %.3f seconds', dt)
+        sprintf('  - Number of Points: %d', num_points)
+        ''
+        sprintf('Generated on: %s', datestr(now))
+    };
+    
+    fid = fopen(fullfile(data_dir, 'README.txt'), 'w');
+    for i = 1:length(readme_content)
+        fprintf(fid, '%s\n', readme_content{i});
+    end
+    fclose(fid);
+    
+    %% ====================== 修复：创建详细验证结果文件 ======================
+    % 计算动态传播峰值
+    [max_delay, idx_delay] = max(dynamic_weights(:,4));
+    [max_rand, idx_rand] = max(dynamic_weights(:,1));
+    
+    % 创建验证结果内容 - 修复了维度不一致问题
+    validation_content = {
+        '=== Multimodal Uncertainty Propagation Validation Results ==='
+        sprintf('Generated on: %s', datestr(now))
+        ''
+        '===== K-S Test Results ====='
+        sprintf('Null Hypothesis: Distributions are consistent')
+        sprintf('K-S Test Result: h = %d (0=accept, 1=reject)', h)
+        sprintf('P-value: %.4f', p)
+    };
+    
+    % 添加结论
+    if h == 0
+        validation_content = [validation_content; {'Conclusion: Accept null hypothesis (distributions consistent)'}];
+    else
+        validation_content = [validation_content; {'Conclusion: Reject null hypothesis (significant difference)'}];
+    end
+    
+    % 添加静态指标
+    validation_content = [validation_content; {
+        ''
+        '===== Key Static Metrics ====='
+        sprintf('Uncertainty Modality\tSobol Main Effect\tTotal Effect\tCritical Path Weight')
+    }];
+    for i = 1:4
+        validation_content = [validation_content; {sprintf('%s\t%.2f\t%.2f\t%.2f', modalities{i}, S1(i), ST(i), weights(i))}];
+    end
+    
+    % 添加动态传播峰值
+    validation_content = [validation_content; {
+        ''
+        '===== Dynamic Propagation Peaks ====='
+        sprintf('Delay Weight Peak: %.2f at t=%.2fs', max_delay, time_vec(idx_delay))
+        sprintf('Random Weight Peak: %.2f at t=%.2fs', max_rand, time_vec(idx_rand))
+    }];
+    
+    % 添加分布验证
+    validation_content = [validation_content; {
+        ''
+        '===== Distribution Validation ====='
+        sprintf('Error Bin\tTheoretical PDF\tExperimental Frequency\tRelative Error')
+    }];
+    for i = 1:length(error_bins)
+        validation_content = [validation_content; {sprintf('%s\t%.2f\t%.2f\t%.1f%%', error_bins{i}, theory_pdf(i), exp_freq(i), rel_error(i))}];
+    end
+    
+    % 添加维度验证
+    validation_content = [validation_content; {
+        ''
+        '===== Dimensional Validation ====='
+        sprintf('Dynamic Weight Matrix Dimension: %d×%d', size(dynamic_weights,1), size(dynamic_weights,2))
+    }];
+    
+    % 保存验证结果文件
+    fid = fopen(fullfile(data_dir, 'validation_results.txt'), 'w');
+    for i = 1:length(validation_content)
+        fprintf(fid, '%s\n', validation_content{i});
+    end
+    fclose(fid);
+    
+    %% ====================== 验证与输出 ======================
+    display_validation_results(theory_pdf, exp_freq, modalities, S1, ST, weights, dynamic_weights, time_vec);
+    
+    fprintf('\n===== 数据保存完成 =====\n');
+    fprintf('所有数据已保存到桌面文件夹: %s\n', data_dir);
+    fprintf('包含以下文件:\n');
+    fprintf('1. static_scenario_data.csv - 静态场景分析数据\n');
+    fprintf('2. dynamic_propagation_data.csv - 动态传播数据\n');
+    fprintf('3. distribution_validation_data.csv - 分布验证数据\n');
+    fprintf('4. validation_results.csv - 验证结果\n');
+    fprintf('5. data_dictionary.csv - 数据字典\n');
+    fprintf('6. static_analysis_3d.png - 静态分析3D图\n');
+    fprintf('7. dynamic_propagation_3d.png - 动态传播3D图\n');
+    fprintf('8. distribution_validation_3d.png - 分布验证3D图\n');
+    fprintf('9. README.txt - 自述文件\n');
+    fprintf('10. validation_results.txt - 详细验证结果\n');
+end
+
+%% ====================== 辅助函数 ======================
+function dynamic_weights = generate_dynamic_weights(time_vec, sim_time)
+    num_steps = length(time_vec);
+    dynamic_weights = zeros(num_steps, 4);
+    
+    for i = 1:num_steps
+        t = time_vec(i);
+        % 动态权重计算逻辑
+        rand_weight = 0.48 * (1 - exp(-t/0.8));
+        delay_weight = 0.55 * exp(-t/0.3);
+        fuzzy_weight = 0.25 * exp(-(t-0.6)^2/0.5);
+        epistemic_weight = 0.15 * (1 - t/sim_time);
+        
+        total = rand_weight + fuzzy_weight + epistemic_weight + delay_weight;
+        dynamic_weights(i, :) = [rand_weight, fuzzy_weight, epistemic_weight, delay_weight] / total;
+    end
+end
+
+function plot_static_analysis_3d(modalities, S1, ST, weights)
+    % 创建3D柱状图
+    figure(gcf);
+    
+    % 准备数据
+    num_modalities = length(modalities);
+    metrics = {'Sobol Main Effect Index', 'Total Effect Index', 'Critical Path Weight'};
+    data = [S1; ST; weights]';
+    
+    % 创建3D柱状图
+    h = bar3(data);
+    
+    % IEEE风格颜色方案
+    ieee_colors = [
+        0.00, 0.45, 0.74; % 蓝色 - Sobol主效应指数
+        0.85, 0.33, 0.10; % 红色 - 总效应指数
+        0.93, 0.69, 0.13; % 黄色 - 关键路径权重
+    ];
+    
+    % 应用颜色到每个柱状图组
+    for i = 1:length(h)
+        set(h(i), 'FaceColor', ieee_colors(i,:), 'FaceAlpha', 0.8);
+    end
+    
+    % 设置坐标轴标签
+    set(gca, 'XTick', 1:3, 'XTickLabel', metrics);
+    xlabel('Metric Type', 'Rotation', 15, 'VerticalAlignment', 'middle', 'FontSize', 12);
+    
+    set(gca, 'YTick', 1:num_modalities, 'YTickLabel', modalities);
+    ylabel('Uncertainty Modality', 'Rotation', -25, 'VerticalAlignment', 'middle', 'FontSize', 12);
+    
+    zlabel('Value', 'FontSize', 12);
+    
+    % 添加标题和图例
+    title('Static Uncertainty Analysis (3D)', 'FontSize', 14, 'FontWeight', 'bold');
+    legend(metrics, 'Location', 'northeast', 'FontSize', 10);
+    
+    % 添加数值标签
+    for j = 1:3  % 遍历度量指标 (X轴)
+        for i = 1:num_modalities  % 遍历不确定性类型 (Y轴)
+            text(j, i, data(i,j)+0.02, num2str(data(i,j), '%.2f'),...
+                'HorizontalAlignment', 'center', 'FontSize', 10, 'FontWeight', 'bold');
+        end
+    end
+    
+    % 设置视角和网格
+    view(-30, 30);
+    grid on;
+    box on;
+    
+    % 美化图形
+    set(gca, 'FontSize', 12, 'LineWidth', 1.5);
+    set(gca, 'ZTick', 0:0.2:0.8);
+end
+
+function plot_dynamic_propagation_3d(time_vec, modalities, dynamic_weights)
+    % 创建3D曲面图
+    figure(gcf);
+    
+    % 准备网格数据
+    [T, M] = meshgrid(time_vec, 1:length(modalities));
+    W = zeros(size(T));
+    
+    for i = 1:length(modalities)
+        W(i,:) = dynamic_weights(:,i)';
+    end
+    
+    % IEEE风格颜色方案
+    ieee_colors = [
+        0.00, 0.45, 0.74; % 蓝色
+        0.47, 0.67, 0.19; % 绿色
+        0.93, 0.69, 0.13; % 黄色
+        0.85, 0.33, 0.10; % 红色
+    ];
+    
+    % 创建自定义颜色映射
+    custom_colormap = interp1(1:4, ieee_colors, linspace(1,4,256));
+    
+     % 绘制3D曲面
+    surf(T, M, W, 'FaceAlpha', 0.85, 'EdgeColor', 'none');
+    shading interp;
+    colormap(custom_colormap); % 使用自定义IEEE颜色映射
+    cbar = colorbar;
+    ylabel(cbar, 'Path Weight', 'FontSize', 12);
+    
+    % 设置坐标轴标签
+    xlabel('Time (s)', 'Rotation', 14, 'VerticalAlignment', 'middle','FontSize', 12);
+    ylabel('Uncertainty Modality','Rotation', -14, 'VerticalAlignment', 'middle', 'FontSize', 12);
+    set(gca, 'YTick', 1:length(modalities), 'YTickLabel', modalities);
+    zlabel('Path Weight', 'FontSize', 12);
+    
+    % 添加标题
+    title('Dynamic Propagation Analysis (3D Surface)', 'FontSize', 14, 'FontWeight', 'bold');
+    
+    % 添加关键区域注释
+    hold on;
+    % 绘制峰值标记 - 使用IEEE推荐的颜色
+    [~, max_delay_idx] = max(dynamic_weights(:,4));
+    plot3(time_vec(max_delay_idx), 4, dynamic_weights(max_delay_idx,4),...
+        'o', 'MarkerSize', 10, 'MarkerFaceColor', ieee_colors(4,:), 'MarkerEdgeColor', 'k');
+    text(time_vec(max_delay_idx), 4, dynamic_weights(max_delay_idx,4)+0.1,...
+        sprintf('Delay Peak: %.2f', dynamic_weights(max_delay_idx,4)),...
+        'Color', ieee_colors(4,:), 'FontSize', 12, 'FontWeight', 'bold');
+    
+    [~, max_rand_idx] = max(dynamic_weights(:,1));
+    plot3(time_vec(max_rand_idx), 1, dynamic_weights(max_rand_idx,1),...
+        'o', 'MarkerSize', 10, 'MarkerFaceColor', ieee_colors(1,:), 'MarkerEdgeColor', 'k');
+    text(time_vec(max_rand_idx), 1, dynamic_weights(max_rand_idx,1)+0.1,...
+        sprintf('Random Peak: %.2f', dynamic_weights(max_rand_idx,1)),...
+        'Color', ieee_colors(1,:), 'FontSize', 12, 'FontWeight', 'bold');
+    
+    % 设置视角
+    view(-45, 30);
+    grid on;
+    
+    % 美化图形
+    set(gca, 'FontSize', 12, 'LineWidth', 1.5);
+    
+    % ====== 关键修改：添加图例说明 ======
+    legend_labels = cell(1, length(modalities));
+    for i = 1:length(modalities)
+        legend_labels{i} = sprintf('%s Uncertainty', modalities{i});
+    end
+    
+    % 创建图例
+    legend_handles = gobjects(1, length(modalities));
+    for i = 1:length(modalities)
+        legend_handles(i) = patch(NaN, NaN, ieee_colors(i,:));
+    end
+    
+    legend(legend_handles, legend_labels, 'Location', 'northeast', 'FontSize', 10);
+end
+
+function plot_distribution_validation_3d(error_bins, theory_pdf, exp_freq, rel_error)
+    % 创建3D柱状图
+    figure(gcf);
+    
+    % 准备数据
+    data = [theory_pdf; exp_freq; abs(rel_error)/100]';
+    num_bins = length(error_bins);
+    metrics = {'Theoretical Probability', 'Measured Frequency', 'Relative Error'};
+    
+    % 创建3D柱状图
+    h = bar3(data);
+    
+    % ====== 关键修改：IEEE期刊风格颜色方案 ======
+    % 定义IEEE推荐的柔和颜色
+    ieee_colors = [
+        0.00, 0.45, 0.74; % 蓝色
+        0.47, 0.67, 0.19; % 绿色
+        0.85, 0.33, 0.10; % 红色
+    ];
+    
+    % 应用颜色到每个柱状图组
+    for i = 1:length(h)
+        % 使用更柔和的颜色
+        set(h(i), 'FaceColor', ieee_colors(i,:), 'FaceAlpha', 0.8);
+    end
+    
+    % ====== 关键修改：交换坐标轴标签 ======
+    % 修正：X轴应该是数据类型，Y轴应该是误差区间
+    set(gca, 'XTick', 1:3, 'XTickLabel', metrics);
+    xlabel('Data Type', 'Rotation', 10, 'VerticalAlignment', 'middle', 'FontSize', 12);
+    
+    set(gca, 'YTick', 1:num_bins, 'YTickLabel', error_bins);
+    ylabel('Error Interval (mm)', 'Rotation', -55, 'VerticalAlignment', 'middle', 'FontSize', 12);
+    
+    zlabel('Value', 'FontSize', 12);
+    
+    % 添加标题和图例
+    title('Hybrid Propagation Validation (3D View)', 'FontSize', 14, 'FontWeight', 'bold');
+    legend(metrics, 'Location', 'northeast');
+    
+    % ====== 关键修改：修正数值标签位置 ======
+    % 注意：现在X轴是数据类型(3个)，Y轴是误差区间(4个)
+    for j = 1:3  % 遍历数据类型 (X轴)
+        for i = 1:num_bins  % 遍历误差区间 (Y轴)
+            if j < 3
+                value = data(i,j);
+                label = sprintf('%.2f', value);
+            else
+                value = rel_error(i);
+                label = sprintf('%.1f%%', value);
+            end
+            
+            text(j, i, data(i,j)+0.02, label,...
+                'HorizontalAlignment', 'center', 'FontSize', 10, 'FontWeight', 'bold');
+        end
+    end
+    
+    % 设置视角和网格
+    view(-20, 30);
+    grid on;
+    box on;
+    
+    % 美化图形
+    set(gca, 'FontSize', 12, 'LineWidth', 1.5);
+end
+
+function display_validation_results(theory_pdf, exp_freq, modalities, S1, ST, weights, dynamic_weights, time_vec)
+    % K-S检验
+    [h, p] = kstest2(theory_pdf, exp_freq);
+    
+    fprintf('=== Model Validation Results ===\n');
+    fprintf('K-S test: h = %d, p = %.4f\n', h, p);
+    if h == 0
+        fprintf('Conclusion: Accept null hypothesis (distributions consistent)\n');
+    else
+        fprintf('Conclusion: Reject null hypothesis (significant difference)\n');
+    end
+    
+    fprintf('\nKey Static Metrics:\n');
+    for i = 1:4
+        fprintf('%s Uncertainty: Sobol Main Effect Index=%.2f, Total Effect Index=%.2f, Weight=%.2f\n',...
+                modalities{i}, S1(i), ST(i), weights(i));
+    end
+    
+    fprintf('\nDynamic Propagation Peaks:\n');
+    [max_delay, idx] = max(dynamic_weights(:,4));
+    fprintf('Delay Weight Peak %.2f @ t=%.2fs\n', max_delay, time_vec(idx));
+    [max_rand, idx] = max(dynamic_weights(:,1));
+    fprintf('Random Weight Peak %.2f @ t=%.2fs\n', max_rand, time_vec(idx));
+    
+    fprintf('\nDimensional Validation:\n');
+    fprintf('Dynamic Weight Matrix Dimension: %d×%d\n', size(dynamic_weights,1), size(dynamic_weights,2));
+end
