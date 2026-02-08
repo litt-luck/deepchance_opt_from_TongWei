@@ -1,0 +1,5 @@
+Modality,MainEffect,TotalEffect,CriticalPathWeight
+Random,0.62,0.78,0.71
+Fuzzy,0.18,0.34,0.23
+Epistemic,0.12,0.25,0.15
+Delay,0.08,0.12,0.06

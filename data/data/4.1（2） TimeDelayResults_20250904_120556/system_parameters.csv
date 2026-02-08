@@ -1,0 +1,2 @@
+SamplingPeriod_s,SimulationDuration_s,TimeDelay_ms,FeedbackGain,DifferentialGain
+0.001,1.5,20,0.7,0.03

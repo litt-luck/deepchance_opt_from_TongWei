@@ -1,0 +1,16 @@
+=== Model Validation Results ===
+K-S test: h = 0, p = 0.9969
+Conclusion: Accept null hypothesis (distributions consistent)
+
+Key Static Metrics:
+Random Uncertainty: Main Effect=0.62, Total Effect=0.78, Weight=0.71
+Fuzzy Uncertainty: Main Effect=0.18, Total Effect=0.34, Weight=0.23
+Epistemic Uncertainty: Main Effect=0.12, Total Effect=0.25, Weight=0.15
+Delay Uncertainty: Main Effect=0.08, Total Effect=0.12, Weight=0.06
+
+Dynamic Propagation Peaks:
+Delay Weight Peak 0.67 @ t=0.00s
+Random Weight Peak 0.99 @ t=2.00s
+
+Dimensional Validation:
+Dynamic Weight Matrix Dimension: 101×4

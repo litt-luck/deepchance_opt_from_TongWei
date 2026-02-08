@@ -1,0 +1,5 @@
+Sensor_Combination,Theoretical_RMSE_mm,Actual_RMSE_mm,Confidence_Gain_Percent
+Monocular vision,2.1,1.09326384099335,0
+Vision+IMU,1.5,0.791770426405708,28.6
+Vision+Lidar,0.9,0.460962291519878,57.1
+Full-Modality Fusion,0.6,0.310513490774809,71.4

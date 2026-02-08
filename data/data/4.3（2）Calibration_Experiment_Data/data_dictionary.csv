@@ -1,0 +1,5 @@
+文件名,描述,列名
+experiment_parameters.csv,实验参数设置,"Parameter: 参数名称, Description: 参数描述, Value: 参数值"
+algorithm_performance.csv,算法性能比较,"Algorithm: 算法名称, TranslationError_mm: 平移误差(mm), RotationError_rad: 旋转误差(rad), Iterations: 迭代次数"
+performance_improvement.csv,性能提升分析,"Metric: 指标名称, ImprovementPercent: 提升百分比"
+experiment_conclusion.txt,实验结论,"文本格式的实验结论"

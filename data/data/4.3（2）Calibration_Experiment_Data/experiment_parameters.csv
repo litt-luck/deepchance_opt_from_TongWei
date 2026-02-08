@@ -1,0 +1,11 @@
+Parameter,Description,Value
+num_points,Number of point cloud points,500
+static_ratio,Static point ratio,0.7
+dynamic_speed,Dynamic point movement speed (m/s),0.1
+noise_level,Point cloud noise standard deviation (m),0.02
+true_translation,True translation (m),"0.15,-0.08,0.03"
+true_rotation,True rotation (radians),"0.12,-0.15,0.1"
+max_iterations,Maximum iterations,20
+convergence_threshold,Convergence threshold,1e-05
+confidence_level,Confidence level,0.95
+outlier_threshold,Outlier threshold (m),0.15

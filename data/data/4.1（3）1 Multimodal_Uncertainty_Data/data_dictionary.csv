@@ -1,0 +1,5 @@
+文件名,描述,列名
+static_scenario_data.csv,静态场景分析数据,"Modality: 不确定性类型, Sobol_Main_Effect: Sobol主效应指数, Total_Effect: 总效应指数, Critical_Path_Weight: 关键路径权重"
+dynamic_propagation_data.csv,动态传播数据,"Time: 时间(s), Random Uncertainty: 随机不确定性权重, Fuzzy Uncertainty: 模糊不确定性权重, Cognitive Uncertainty: 认知不确定性权重, Time-Delay Uncertainty: 时延不确定性权重"
+distribution_validation_data.csv,分布验证数据,"Error_Bin: 误差区间(mm), Theoretical_PDF: 理论概率密度, Experimental_Frequency: 实验频率, Relative_Error_Percent: 相对误差百分比"
+validation_results.csv,验证结果,"KSTest_RejectNull: K-S检验是否拒绝原假设(0=接受,1=拒绝), KSTest_PValue: K-S检验P值"

@@ -1,0 +1,13 @@
+文件名,描述,列名
+time_series.csv,时间序列数据,"Time_s: 仿真时间(秒)"
+true_trajectory.csv,真实轨迹数据,"Position_X, Position_Y, Position_Z: 三维坐标(m)"
+camera_data.csv,相机传感器数据,"Position_X, Position_Y, Position_Z: 带噪声的三维坐标(m)"
+lidar_data.csv,激光雷达传感器数据,"Position_X, Position_Y, Position_Z: 带噪声的三维坐标(m)"
+imu_data.csv,IMU传感器数据,"Position_X, Position_Y, Position_Z: 带噪声的三维坐标(m)"
+Monocular_vision_trajectory.csv,单目视觉融合轨迹,"Position_X, Position_Y, Position_Z: 融合后的三维坐标(m)"
+Vision+IMU_trajectory.csv,视觉+IMU融合轨迹,"Position_X, Position_Y, Position_Z: 融合后的三维坐标(m)"
+Vision+Lidar_trajectory.csv,视觉+激光雷达融合轨迹,"Position_X, Position_Y, Position_Z: 融合后的三维坐标(m)"
+Full-Modality_Fusion_trajectory.csv,全模态融合轨迹,"Position_X, Position_Y, Position_Z: 融合后的三维坐标(m)"
+performance_metrics.csv,性能指标数据,"Sensor_Combination: 传感器组合, Theoretical_RMSE_mm: 理论均方根误差(mm), Actual_RMSE_mm: 实际均方根误差(mm), Confidence_Gain_Percent: 置信度提升率(%)"
+monocular_vision_error.csv,单目视觉误差分布,"Error_mm: 定位误差(mm)"
+full_fusion_error.csv,全融合误差分布,"Error_mm: 定位误差(mm)"

@@ -1,0 +1,29 @@
+=== Multimodal Uncertainty Propagation Validation Results ===
+Generated on: 28-Sep-2025 14:26:20
+
+===== K-S Test Results =====
+Null Hypothesis: Distributions are consistent
+K-S Test Result: h = 0 (0=accept, 1=reject)
+P-value: 0.9969
+Conclusion: Accept null hypothesis (distributions consistent)
+
+===== Key Static Metrics =====
+Uncertainty Modality	Sobol Main Effect	Total Effect	Critical Path Weight
+Random Uncertainty	0.62	0.78	0.71
+Fuzzy Uncertainty	0.18	0.34	0.23
+Cognitive Uncertainty	0.12	0.25	0.15
+Time-Delay Uncertainty	0.08	0.12	0.06
+
+===== Dynamic Propagation Peaks =====
+Delay Weight Peak: 0.67 at t=0.00s
+Random Weight Peak: 0.99 at t=2.00s
+
+===== Distribution Validation =====
+Error Bin	Theoretical PDF	Experimental Frequency	Relative Error
+[0,0.01)	0.38	0.35	-7.9%
+[0.01,0.02)	0.45	0.47	4.4%
+[0.02,0.03)	0.15	0.16	6.7%
+≥0.03	0.02	0.02	0.0%
+
+===== Dimensional Validation =====
+Dynamic Weight Matrix Dimension: 101×4
